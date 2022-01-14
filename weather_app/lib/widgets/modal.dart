@@ -140,7 +140,7 @@ class ModalPicker extends StatelessWidget {
                             padding: const EdgeInsets.only(top: 10),
                             child: Text(
                               label,
-                              style: TextStyle(fontSize: 18, color: Colors.orange, fontWeight: FontWeight.bold),
+                              style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
                               textAlign: TextAlign.center,
                             ),
                           ),

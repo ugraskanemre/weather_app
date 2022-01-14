@@ -1,25 +1,25 @@
 class NearCityResponse {
+  int distance;
   String title;
   String location_type;
-  String latt_long;
-  int distance;
   int woeid;
+  String latt_long;
 
   NearCityResponse(
+    this.distance,
     this.title,
     this.location_type,
-    this.latt_long,
-    this.distance,
     this.woeid,
+    this.latt_long,
   );
 
   factory NearCityResponse.fromJson(dynamic json) {
     return NearCityResponse(
+      json['distance'] as int,
       json['title'] as String,
       json['location_type'] as String,
-      json['latt_long'] as String,
-      json['distance'] as int,
       json['woeid'] as int,
+      json['latt_long'] as String,
     );
   }
 

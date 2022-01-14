@@ -11,8 +11,8 @@ class NoInternetPage extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Colors.purple,
-              Colors.orange,
+              Color(0XFF90CAF9),
+              Color(0XFF01579B),
             ],
           ),
         ),
@@ -26,7 +26,7 @@ class NoInternetPage extends StatelessWidget {
             ),
             SizedBox(height: 40),
             Text(
-              "İnternet Bağlantısı Yok",
+              "No Internet connection",
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -36,7 +36,7 @@ class NoInternetPage extends StatelessWidget {
             Padding(
               padding: EdgeInsets.all(15),
               child: Text(
-                "Lütfen önce internet bağlantınızı kontrol ediniz, ardından sayfayı yenileyiniz.",
+                "Please check your internet connection first, then refresh the page.",
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, color: Colors.white),
               ),
@@ -55,7 +55,7 @@ class NoInternetPage extends StatelessWidget {
                   onPressed: () => print("a"),
                   //onPressed: () => checkPermissions(),
                   child: Text(
-                    "Yenile",
+                    "Refresh",
                     style: TextStyle(fontSize: 16),
                   ),
                 ),

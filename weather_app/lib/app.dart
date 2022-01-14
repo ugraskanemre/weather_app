@@ -34,7 +34,7 @@ class _WeatherAppState extends State<WeatherApp> {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Hava Durumu',
+        title: 'Weather',
         theme: ThemeData(
           textTheme: GoogleFonts.latoTextTheme(
             Theme.of(context).textTheme,
@@ -43,18 +43,18 @@ class _WeatherAppState extends State<WeatherApp> {
         routes: {
           '/': (context) => RedirectPage(),
           '/select-city': (context) => SelectCityPage(pushLocationData: RedirectPage.pushLocationData,),
-          '/detail-weather-city': (context) => DetailWeatherCityPage(),
+          '/detail-weather-city': (context) => DetailWeatherCityPage(woeid: SelectCityPage.woeid,),
           '/no-internet': (context) => NoInternetPage(),
         },
         initialRoute: "/",
         onUnknownRoute: (settings) => MaterialPageRoute(
           builder: (context) => Scaffold(
             appBar: AppBar(
-              title: Text("Üzgünüz!"),
+              title: Text("Sorry!"),
               centerTitle: true,
             ),
             body: Center(
-              child: Text('Hay aksi, bir hata oluştu.'),
+              child: Text('Oops, an error has occurred.'),
             ),
           ),
         ),

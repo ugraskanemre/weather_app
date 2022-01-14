@@ -1,20 +1,31 @@
+// ignore_for_file: file_names
+
 import 'dart:convert';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert' as convert;
-
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:weather_app/commons/config.dart';
 import 'package:weather_app/entities/near-city.dart';
+import 'package:weather_app/entities/weekly-weather-location.dart';
+import 'package:weather_app/pages/detail-weather-city.dart';
 import 'package:weather_app/pages/no-internet.dart';
+import 'package:weather_app/services/location.dart';
 import 'package:weather_app/utils/connectivity_provider.dart';
+import 'package:weather_app/widgets/background.dart';
 import 'package:weather_app/widgets/modal.dart';
 
 class SelectCityPage extends StatefulWidget {
+  static int woeid = 0;
   Map pushLocationData;
 
   SelectCityPage({Key? key, required this.pushLocationData}) : super(key: key);
+
+  static FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+  static FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(analytics: analytics);
 
   @override
   State<StatefulWidget> createState() => _SelectCityPageState();
@@ -23,6 +34,7 @@ class SelectCityPage extends StatefulWidget {
 class _SelectCityPageState extends State<SelectCityPage> {
   String latitude = "";
   String longitude = "";
+  String currentCity = "";
   List<NearCityResponse> nearCityList = [];
   List<DropdownMenuItem> _items_near_city_dropdown = [];
   late bool _isLoading = true;
@@ -34,36 +46,49 @@ class _SelectCityPageState extends State<SelectCityPage> {
 
     latitude = widget.pushLocationData["latitude"];
     longitude = widget.pushLocationData["longitude"];
-
     getNearCities();
+  }
+
+  Future<void> firebaseLogEvent(selectedCityWoeid) async {
+    await SelectCityPage.analytics.logEvent(
+      name: 'select_city',
+      parameters: <String, dynamic>{
+        'woeid': selectedCityWoeid,
+      },
+    );
+
   }
 
   Future<void> getNearCities() async {
     setState(() {
       _isLoading = true;
     });
-    var response = await http.get(Uri.parse("https://www.metaweather.com/api/location/search/?lattlong=$latitude,$longitude")).whenComplete(() {
-      setState(() {
-        _isLoading = false;
-      });
-    });
-    if (response.statusCode == 200) {
-      var cityObjsJson = jsonDecode(response.body) as List;
-      nearCityList = cityObjsJson.map((tagJson) => NearCityResponse.fromJson(tagJson)).toList();
+    try {
+      Future.delayed(Duration(milliseconds: 200)).then((_) async {
+        await LocationService().getNearLocations(latitude, longitude).then((value) {
+          var cityObjsJson = jsonDecode(value.body) as List;
+          nearCityList = cityObjsJson.map((tagJson) => NearCityResponse.fromJson(tagJson)).toList();
+          currentCity = nearCityList.length > 0 ? nearCityList[0].title : "";
 
-      nearCityList.forEach((city) {
-        _items_near_city_dropdown.add(
-          (DropdownMenuItem(
-            child: Text(
-              "${city.title}",
-              style: TextStyle(color: Color(0xFF117BD6)),
-            ),
-            value: city.woeid,
-          )),
-        );
+          nearCityList.forEach((city) {
+            _items_near_city_dropdown.add(
+              (DropdownMenuItem(
+                child: Text(
+                  "${city.title}",
+                  style: TextStyle(color: Colors.lightBlue),
+                ),
+                value: city.woeid,
+              )),
+            );
+          });
+        }).whenComplete(() {
+          print("getNearLocations service completed");
+          setState(() => _isLoading = false);
+        });
       });
-    } else {
-      print('Request failed with status: ${response.statusCode}.');
+    } catch (e) {
+      print(e);
+      setState(() => _isLoading = false);
     }
   }
 
@@ -74,18 +99,7 @@ class _SelectCityPageState extends State<SelectCityPage> {
         return model.isOnline
             ? Stack(
                 children: [
-                  Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.purple,
-                          Colors.orange,
-                        ],
-                      ),
-                    ),
-                  ),
+                  Background(),
                   _isLoading
                       ? Scaffold(
                           backgroundColor: Colors.transparent,
@@ -95,12 +109,14 @@ class _SelectCityPageState extends State<SelectCityPage> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  CircularProgressIndicator(),
+                                  CircularProgressIndicator(
+                                    color: Colors.white,
+                                  ),
                                   SizedBox(
                                     height: 40,
                                   ),
                                   Text(
-                                    "Yakın bölgenizdeki şehirler aranıyor...",
+                                    "Searching for cities near you...",
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontSize: 16,
@@ -132,7 +148,7 @@ class _SelectCityPageState extends State<SelectCityPage> {
                                         width: 10,
                                       ),
                                       Text(
-                                        "${nearCityList[0].title}",
+                                        "${currentCity}",
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 20,
@@ -152,10 +168,10 @@ class _SelectCityPageState extends State<SelectCityPage> {
                                           Expanded(
                                             child: Column(
                                               children: <Widget>[
-                                                Text("Şehir Seçiniz", style: TextStyle(fontSize: 28, color: Colors.white)),
+                                                Text("Select a city", style: TextStyle(fontSize: 28, color: Colors.white)),
                                                 SizedBox(height: 9),
                                                 Text(
-                                                  "Hava durumunu görüntülemek istediğiniz şehri aşağıdan seçiniz.",
+                                                  "Please select the city you want to view the weather forecast for below.",
                                                   textAlign: TextAlign.center,
                                                   style: TextStyle(
                                                     fontSize: 16,
@@ -170,10 +186,14 @@ class _SelectCityPageState extends State<SelectCityPage> {
                                                       child: ModalPicker(
                                                         key: UniqueKey(),
                                                         autoValidateMode: AutovalidateMode.onUserInteraction,
-                                                        label: "Şehirler",
+                                                        label: "Cities",
                                                         items: _items_near_city_dropdown,
-                                                        valueChanged: (val) {
-                                                          print(val.toString());
+                                                        valueChanged: (val) async {
+                                                          SelectCityPage.woeid = val;
+                                                          await firebaseLogEvent(SelectCityPage.woeid);
+                                                          Future.delayed(Duration(milliseconds: 100)).then((_) {
+                                                            Navigator.pushNamed(context, "/detail-weather-city");
+                                                          });
                                                         },
                                                       ),
                                                     ),

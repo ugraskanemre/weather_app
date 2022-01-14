@@ -6,6 +6,7 @@ import 'package:weather_app/pages/no-internet.dart';
 import 'package:weather_app/pages/select-city.dart';
 import 'package:weather_app/utils/connectivity_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:weather_app/widgets/background.dart';
 
 class RedirectPage extends StatefulWidget {
   static Map<String, String> pushLocationData = {};
@@ -45,14 +46,16 @@ class _RedirectPageState extends State<RedirectPage> {
       _locationData = await location.getLocation();
       RedirectPage.pushLocationData = {'latitude': _locationData.latitude.toString(), 'longitude': _locationData.longitude.toString()};
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => SelectCityPage(
-            pushLocationData: RedirectPage.pushLocationData,
+      Future.delayed(Duration(milliseconds: 200)).then((_) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SelectCityPage(
+              pushLocationData: RedirectPage.pushLocationData,
+            ),
           ),
-        ),
-      );
+        );
+      });
     } else {
       setState(() {
         _isLoading = false;
@@ -88,7 +91,7 @@ class _RedirectPageState extends State<RedirectPage> {
             ),
             backgroundColor: Colors.white,
             content: Container(
-              height: 90,
+              height: 120,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -99,10 +102,13 @@ class _RedirectPageState extends State<RedirectPage> {
                         Icons.info_outline,
                         color: Colors.blue,
                       ),
-                      Text(
-                        'Konum iznini lütfen uygulama ayarlarından açınız!',
-                        style: TextStyle(
-                          color: Colors.black,
+                      Flexible(
+                        child: Text(
+                          'Please turn on location permission in app settings!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.black,
+                          ),
                         ),
                       ),
                     ],
@@ -110,14 +116,16 @@ class _RedirectPageState extends State<RedirectPage> {
                   SizedBox(
                     height: 10,
                   ),
-                  Container(
-                    width: 100,
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(primary: Colors.white, backgroundColor: Colors.lightBlue),
-                      onPressed: () => _openAppSettings(),
-                      child: Text(
-                        "Git",
-                        style: TextStyle(color: Colors.white),
+                  Center(
+                    child: Container(
+                      width: 100,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(primary: Colors.white, backgroundColor: Colors.lightBlue),
+                        onPressed: () => _openAppSettings(),
+                        child: Text(
+                          "Go",
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                     ),
                   )
@@ -139,14 +147,17 @@ class _RedirectPageState extends State<RedirectPage> {
     _locationData = await location.getLocation();
 
     RedirectPage.pushLocationData = {'latitude': _locationData.latitude.toString(), 'longitude': _locationData.longitude.toString()};
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SelectCityPage(
-          pushLocationData: RedirectPage.pushLocationData,
+
+    Future.delayed(Duration(milliseconds: 200)).then((_) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SelectCityPage(
+            pushLocationData: RedirectPage.pushLocationData,
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   @override
@@ -157,18 +168,7 @@ class _RedirectPageState extends State<RedirectPage> {
           return model.isOnline
               ? Stack(
                   children: [
-                    Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Colors.purple,
-                            Colors.orange,
-                          ],
-                        ),
-                      ),
-                    ),
+                    Background(),
                     _isLoading
                         ? Scaffold(
                             backgroundColor: Colors.transparent,
@@ -178,12 +178,14 @@ class _RedirectPageState extends State<RedirectPage> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    CircularProgressIndicator(),
+                                    CircularProgressIndicator(
+                                      color: Colors.white,
+                                    ),
                                     SizedBox(
                                       height: 40,
                                     ),
                                     Text(
-                                      "Konum bilgileriniz kontrol ediliyor",
+                                      "Checking your location information",
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         fontSize: 16,
@@ -211,10 +213,10 @@ class _RedirectPageState extends State<RedirectPage> {
                                             Expanded(
                                               child: Column(
                                                 children: <Widget>[
-                                                  Text("Konum İzni", style: TextStyle(fontSize: 28, color: Colors.white)),
+                                                  Text("Location Permission", style: TextStyle(fontSize: 28, color: Colors.white)),
                                                   SizedBox(height: 9),
                                                   Text(
-                                                    "Uygulamayı kullanabilmek için konum izni vermeniz gerekiyor.",
+                                                    "In order to use the application, you need to give location permission.",
                                                     textAlign: TextAlign.center,
                                                     style: TextStyle(
                                                       fontSize: 16,
@@ -243,7 +245,7 @@ class _RedirectPageState extends State<RedirectPage> {
                                                 backgroundColor: Colors.transparent,
                                               ),
                                               onPressed: () => checkLocationServicePermission(),
-                                              child: Text("İzin Ver", style: TextStyle(fontSize: 16)),
+                                              child: Text("Allow", style: TextStyle(fontSize: 16)),
                                             ),
                                           ],
                                         ),
